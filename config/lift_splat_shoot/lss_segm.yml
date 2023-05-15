@@ -1,4 +1,4 @@
-save_dir: /Users/workspace/lss_segm_exp1
+save_dir: /Users/lvanyang/Downloads/lvan/lss_segm_exp1
 enable_fp16: True
 model:
 #  weight_averager:
@@ -76,7 +76,7 @@ data:
       scale: [ 0.95, 1.05 ]
       stretch: [ [ 1.0, 1.0 ], [ 1.0, 1.0 ] ]
       rotation: 2
-      shear: 0`1
+      shear: 0
       translate: 0.05
       flip: 0.
       color_transform: True
@@ -114,7 +114,7 @@ schedule:
   total_epochs: 300
   lr_schedule:
     name: CosineAnnealingLR
-    T_max: 300
+    T_max: 30
     eta_min: 0.00005
   val_intervals: 1
 grad_clip: 5
@@ -131,6 +131,6 @@ evaluators:
 log:
   interval: 50
 save:
-  interval: 50
+  interval: 5
 
 class_names: []

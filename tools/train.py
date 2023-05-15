@@ -21,7 +21,6 @@ sys.path.insert(0, os.path.abspath('.'))
 import pytorch_lightning as pl
 import torch
 from pytorch_lightning.callbacks import TQDMProgressBar
-from tools.time_check import is_desensitive_available
 
 from method.data.collate import (
     collate_function
@@ -57,8 +56,8 @@ def parse_args():
         "--config",
         type=str,
         help="train config file path",
-        default='/Users/lvanyang/ADAS/ADMultiTaskPerception/config/bevdepth/3ddet_centerhead.yml'
-        # default='/Users/lvanyang/ADAS/ADMultiTaskPerception/config/lift_splat_shoot/lss_segm.yml'
+        # default='/Users/lvanyang/ADAS/ADMultiTaskPerception/config/bevdepth/3ddet_centerhead.yml'
+        default='/Users/lvanyang/ADAS/bev-perception-learning-for-autonoumous-driving/config/lift_splat_shoot/lss_segm.yml'
     )
     parser.add_argument(
         "--local_rank",
@@ -162,12 +161,6 @@ def main(args):
 
     logger = NanoDetLightningLogger(cfg.save_dir)
     logger.dump_cfg(cfg)
-
-    if is_desensitive_available():
-        pass
-    else:
-        logger.info("Desensitive Pkgs are not available, please contact lvanyang@tencent.com")
-        return
 
     if args.seed is not None:
         logger.info("Set random seed to {}".format(args.seed))

@@ -26,7 +26,7 @@ def parse_args():
                         type=str,
                         # default='/Users/lvanyang/ADAS/Model/Face/20220923142716/model_last_init.onnx'
                         # default='/Users/lvanyang/Downloads/model_last.ckpt'
-                        default='/Users/lvanyang/Downloads/model_best.ckpt'
+                        default='/Users/lvanyang/Downloads/lss_segm.ckpt'
                         )
     parser.add_argument('--dataset', type=str, help='dataset name',
                         default='nuscenes'
