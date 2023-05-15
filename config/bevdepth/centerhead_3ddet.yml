@@ -1,0 +1,186 @@
+save_dir: /Users/lvanyang/ADAS/method/workspace/nanodet_plus_test
+enable_fp16: true
+enable_sync_bn: false
+model:
+#  weight_averager:
+#    name: ExpMovingAverager
+#    decay: 0.9998
+  arch:
+    name: BevDepthDetector
+    save_memory_mode: False
+    backbone:
+      name: TIMMWrapper
+      model_name: convnext_nano
+      features_only: True
+      pretrained: True
+      out_indices: [0, 1, 2, 3 ]
+    fpn:
+      name: PAN
+      in_channels: [80, 160, 320, 640]
+      out_strides: [4, 8, 16, 32]
+      out_channels: 256
+      num_outs: 4
+      num_extra_level: 0
+      use_depthwise: False
+    bev_generator:
+      name: BevDepthBEVGenerator
+      version:
+      input_stages: [ 2 ]  # 可以控制fpn的特征有多少个输入到这个检测头， 原文只用了stride==16的特征
+      input_channel: 256
+      image_channel: 80
+      depth_channel: 112
+      output_channel: 64
+      dbound: [ 2.0, 58.0, 0.5 ]
+      xbound: [ -51.2, 51.2, 0.8 ]
+      ybound: [ -51.2, 51.2, 0.8 ]
+      zbound: [ -5, 3, 8 ]
+      bev_xy_transpose: False  # centerhead should be false
+      enable_pos_embedding: True
+      multi_frame: True
+      use_da: True
+    head:
+      # 可以自由配置检测头，检测头结尾必须是_head
+      box3d_head:
+        name: BEVCenter3DHead
+        input_channel: 256
+        target_names: [
+            'vehicle.bus.bendy', 'vehicle.bus.rigid', 'vehicle.car', 'vehicle.construction','vehicle.truck', 'vehicle.trailer',
+            'human.pedestrian.adult', 'human.pedestrian.child', 'human.pedestrian.construction_worker', 'human.pedestrian.police_officer',
+            'vehicle.bicycle', 'vehicle.motorcycle', 'movable_object.barrier', 'movable_object.trafficcone'
+        ]
+        target_maps: [
+            'bus', 'bus', 'car', 'construction_vehicle', 'truck', 'trailer',
+            'pedestrian', 'pedestrian', 'pedestrian', 'pedestrian',
+            'bicycle', 'motorcycle', 'barrier', 'traffic_cone'
+        ]
+        class_names: [
+            'car',
+            'truck',
+            'construction_vehicle',
+            'bus',
+            'trailer',
+            'barrier',
+            'motorcycle',
+            'bicycle',
+            'pedestrian',
+            'traffic_cone'
+        ]
+        bbox_coder:
+          type: CenterPointBBoxCoder
+          post_center_range: [-61.2, -61.2, -10.0, 61.2, 61.2, 10.0]
+          max_num: 500
+          score_threshold: 0.1
+          out_size_factor: 4
+          voxel_size: [0.2, 0.2, 8]
+          pc_range: [-51.2, -51.2, -5, 51.2, 51.2, 3]
+          code_size: 9
+        loss:
+          loss_cls:
+            type: GaussianFocalLoss
+            reduction: mean
+          loss_box:
+            type: L1Loss
+            reduction: mean
+            loss_weight: 0.25
+          depth_supervised:
+            depth_channel: 112
+            downsample_factor: [16]
+
+        # 可视化用
+#        conf_thresh: 0.4  # 可视化后处理用
+#        nms_thresh: 0.25  # 可视化后处理用
+
+        # 训练时评测用
+        conf_thresh: 0.1  # 可视化后处理用
+        nms_thresh: 0.1  # 可视化后处理用
+
+data:
+  train:
+    name: NuScenesDataset
+    data_root: /Volumes/KINGSTON0/nuscenes
+#    map_folder: /Volumes/KINGSTON0/nuscenes/nuScenes-map-expansion-v1.3
+    version: mini
+    input_size: [ 704, 256 ] #[w,h]
+    target_cameras: ['CAM_BACK', 'CAM_BACK_LEFT', 'CAM_BACK_RIGHT', 'CAM_FRONT', 'CAM_FRONT_LEFT', 'CAM_FRONT_RIGHT']
+    map_extractor: ['drivable_area', 'road_divider', 'lane_divider']
+    map_range: [100, 100]  # longitude lateral
+    keep_ratio: False
+    img_read: pillow  # cv2 or pillow
+    data_balance: False
+    with_depth: True
+    multi_frame: True
+    pipeline:
+      type: lss_based
+      train: True
+      img_aug:
+        resize_lim: [ 0.386, 0.55 ]
+        bot_pct_lim: [ 0.0, 0.0 ]
+        rot_lim: [ -5.4, 5.4 ]
+        rand_flip: True
+      bev_aug:
+        rot_lim: [-22.5, 22.5]
+        scale_lim: [0.95, 1.05]
+        flip_dx_ratio: 0.5
+        flip_dy_ratio: 0.5
+      normalize: [ [ 103.53, 116.28, 123.675 ], [ 57.375, 57.12, 58.395 ] ]
+    cache_data: False
+  val:
+    name: NuScenesDataset
+    data_root: /Volumes/KINGSTON0/nuscenes
+#    map_folder: /Volumes/KINGSTON0/nuscenes/nuScenes-map-expansion-v1.3
+    version: mini
+    input_size: [ 704, 256 ] #[w,h]
+    target_cameras: ['CAM_BACK', 'CAM_BACK_LEFT', 'CAM_BACK_RIGHT', 'CAM_FRONT', 'CAM_FRONT_LEFT', 'CAM_FRONT_RIGHT']
+    map_extractor: [ 'drivable_area', 'road_divider', 'lane_divider' ]
+    map_range: [ 100, 100 ] # longitude lateral
+    keep_ratio: False
+    img_read: pillow  # cv2 or pillow
+    with_depth: True
+    multi_frame: True
+    pipeline:
+      type: lss_based
+      train: False
+      img_aug:
+        bot_pct_lim: [ 0.0, 0.0 ]
+      bev_aug:
+        rot_lim: [ 0, 0 ]
+        scale_lim: [ 1., 1. ]
+        flip_dx_ratio: 0.
+        flip_dy_ratio: 0.
+      normalize: [ [ 103.53, 116.28, 123.675 ], [ 57.375, 57.12, 58.395 ] ]
+device:
+  gpu_ids: -1 # Set like [0, 1, 2, 3] if you have multi-GPUs  if use CPU, set as -1
+  workers_per_gpu: 1
+  batchsize_per_gpu: 2
+schedule:
+#  resume:
+#  load_model: '/Users/lvanyang/Downloads/model_last.ckpt'
+  optimizer:
+    name: AdamW
+    lr: 0.0002
+    weight_decay: 0.0000001
+  warmup:
+    name: linear
+    steps: 1000
+    ratio: 0.0001
+  total_epochs: 36
+  lr_schedule:
+    name: MultiStepLR
+    milestones: [ 28, 32 ]
+    gamma: 0.1
+  val_intervals: 2
+grad_clip: 5
+evaluators:
+  box3d_evaluator:
+    name: Box3dEvaluator
+    box3d_head:
+      data_root: /Volumes/KINGSTON0/nuscenes
+      dataset: NuScenes
+      split: mini_val
+      version: mini
+log:
+  interval: 50
+save:
+  interval: 50
+
+class_names: []
