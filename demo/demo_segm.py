@@ -28,8 +28,8 @@ def parse_args():
                         # default='/Users/lvanyang/Downloads/model_last.ckpt'
                         default='/Users/lvanyang/Downloads/lss_segm.ckpt'
                         )
-    parser.add_argument('--dataset', type=str, help='dataset name',
-                        default='nuscenes'
+    parser.add_argument('--device', type=str, help='inference device name (e.g., cpu, cuda, mps)',
+                        default='cpu'
                         )
     args = parser.parse_args()
     return args
@@ -173,11 +173,10 @@ def main():
     torch.backends.cudnn.enabled = True
     torch.backends.cudnn.benchmark = True
 
-    current_time = time.localtime()
     load_config(cfg, args.cfg_file)
 
     logger = Logger(-1, cfg.save_dir, use_tensorboard=False)
-    predictor = Predictor(cfg, args.model_file, logger, device='mps')  # cuda:0 ; cpu; mps(macm1 gpu)
+    predictor = Predictor(cfg, args.model_file, logger, device=args.device)  # cuda:0 ; cpu; mps(macm1 gpu)
 
     dataset = build_dataset(cfg.data.val, "train" if args.viz_train else 'val', logger)
     cur_idx = 0
