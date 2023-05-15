@@ -11,10 +11,17 @@ python tools/train.py --config ${cfg_file}
 ```
 
 #### Demo
-以下脚本用于可视化模型检测效果，请在对应配置文件中指定好您的数据集位置，然后您将会看到如图1.所示的检测效果
+以下脚本用于可视化模型检测效果，请在对应配置文件中指定好您的数据集位置，然后您将会看到如图1.所示的检测效果，其中，左侧六张图像为camera输入，右侧上方为真值，右侧下方为网络预测值，预训练的网络可以在model zoo中下载 (LSS & Segm)
 ```bash
 python demo/demo_segm.py --cfg_file=${cfg_file} --model_file=${model_ckpt}
 ```
-
-<div align=center><img src="docs/figs/imgs/lss_segm_nuscenes_mini.gif"></div>
+<div align=center><img src="docs/figs/lss_segm_nuscenes_mini.gif"></div>
 <div align="center">图.1 Lift splat shoot 分割检测头效果</div>
+
+###Model Zoo
+以下为模型预训练文件及训练log，验证集指标可以在log中查看
+
+| Method | Type | Link | Log |
+|--------|---------------|------| ----|
+|  LSS | Segm  | [Google](https://drive.google.com/file/d/1eOdib9VxuRg33AaQBIIN4PE65fN7gmZS/view?usp=share_link) | [Google](https://drive.google.com/file/d/17_PxiWg43fv_dQl8_zt4TkmYdEsQ4WPq/view?usp=share_link)|
+| bevdepth     | todo         | - | - |
