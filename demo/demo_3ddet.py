@@ -1,6 +1,4 @@
 import sys
-
-sys.path.insert(0, '/Users/lvanyang/ADAS/ADMultiTaskPerception')
 import time
 import cv2
 import os
@@ -37,19 +35,11 @@ def parse_args():
                         default=False)
     parser.add_argument('--cfg_file', help='model config file path',
                         type=str,
-                        # default='/Users/lvanyang/ADAS/ADMultiTaskPerception/config/lift_splat_shoot_3d.yml'
-                        # default='/Users/lvanyang/ADAS/ADMultiTaskPerception/config/lls_3d_split_heads.yml'
-                        # default='/Users/lvanyang/ADAS/ADMultiTaskPerception/config/lift_splat_shoot/lss_3ddet_centerhead.yml'
-                        # default='/Users/lvanyang/ADAS/ADMultiTaskPerception/config/lift_splat_shoot/lss_3ddet_coshead.yml'
-                        # default='/Users/lvanyang/ADAS/ADMultiTaskPerception/config/bevdepth/3ddet_centerhead_1key.yml'
-                        default='/Users/lvanyang/ADAS/ADMultiTaskPerception/config/bevdepth/3ddet_centerhead.yml'
-                        # default='/Users/lvanyang/ADAS/ADMultiTaskPerception/config/bevdepth/3ddet_coshead.yml'
+                        default='/Users/lvanyang/ADAS/bev-perception-learning-for-autonoumous-driving/config/bevdepth/centerhead_3ddet.yml'
                         )
     parser.add_argument('--model_file', help='ckpt file',
                         type=str,
-                        # default='/Users/lvanyang/ADAS/Model/Face/20220923142716/model_last_init.onnx'
-                        # default='/Users/lvanyang/Downloads/3ddet_centerhead_1key.ckpt'
-                        default='/Users/lvanyang/Downloads/model_best.ckpt'
+                        default='/Users/lvanyang/Downloads/bevdepth_3ddet.ckpt'
                         )
     parser.add_argument('--device', type=str, help='inference device name (e.g., cpu, cuda, mps)',
                         default='cpu'
