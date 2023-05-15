@@ -1,0 +1,136 @@
+save_dir: /Users/workspace/lss_segm_exp1
+enable_fp16: True
+model:
+#  weight_averager:
+#    name: ExpMovingAverager
+#    decay: 0.9998
+  arch:
+    name: OneStageDetector
+    backbone:
+      name: TIMMWrapper
+      model_name: convnext_nano
+      features_only: True
+      pretrained: True
+      out_indices: [ 1, 2, 3 ]
+    fpn:
+      name: PAN
+      in_channels: [160, 320, 640]
+      out_strides: [8, 16, 32]
+      out_channels: 256
+      num_outs: 3
+      num_extra_level: 0
+      use_depthwise: False
+    bev_generator:
+      name: LiftSplatShootBEVGenerator
+      version:
+      input_stages: [ 1 ]  # 可以控制fpn的特征有多少个输入到这个检测头， LSS原文只用了stride==16的特征
+      input_channel: 256
+      image_channel: 64
+      depth_channel: 41
+      output_channel: 64
+      dbound: [ 4.0, 45.0, 1.0 ]
+      xbound: [ -50.0, 50.0, 0.5 ]
+      ybound: [ -50.0, 50.0, 0.5 ]
+      zbound: [ -10.0, 10.0, 20.0 ]
+    head:
+      # 可以自由配置检测头，检测头结尾必须是_head
+      veh_segm_head:
+        name: BEVSegmHead
+        target_names: [ 'vehicle' ]
+        target_maps: [ 'vehicle' ]
+        input_channel: 64
+        loss:
+          name: LSSSegmLoss
+
+      drivable_segm_head:
+        name: BEVSegmHead
+        target_names: [ 'drivable_area' ]
+        target_maps: [ 'drivable_area' ]
+        input_channel: 64
+        loss:
+          name: LSSSegmLoss
+
+      laneline_segm_head:
+        name: BEVSegmHead
+        target_names: [  'road_divider', 'lane_divider' ]
+        target_maps: [ 'laneline', 'laneline' ]
+        input_channel: 64
+        loss:
+          name: LSSSegmLoss
+data:
+  train:
+    name: NuScenesDataset
+    # 指定您的nuscenes数据集路径
+    data_root: /Volumes/KINGSTON0/nuscenes
+    # 要预测地图相关元素的话，需要指定nusences map路径，如上面drivable_segm_head和laneline_segm_head
+    map_folder: /Volumes/KINGSTON0/nuscenes/nuScenes-map-expansion-v1.3
+    version: mini  # mini or trainval, mini is just for debug
+    input_size: [ 448, 256 ] #[w,h]
+    target_cameras: ['CAM_BACK', 'CAM_BACK_LEFT', 'CAM_BACK_RIGHT', 'CAM_FRONT', 'CAM_FRONT_LEFT', 'CAM_FRONT_RIGHT']
+    map_extractor: ['drivable_area', 'road_divider', 'lane_divider']
+    map_range: [100, 100]  # longitude lateral
+    keep_ratio: False
+    img_read: cv2  # cv2 or pillow
+    pipeline:
+      perspective: 0
+      scale: [ 0.95, 1.05 ]
+      stretch: [ [ 1.0, 1.0 ], [ 1.0, 1.0 ] ]
+      rotation: 2
+      shear: 0`1
+      translate: 0.05
+      flip: 0.
+      color_transform: True
+      normalize: [ [ 103.53, 116.28, 123.675 ], [ 57.375, 57.12, 58.395 ] ]
+    cache_data: False
+  val:
+    name: NuScenesDataset
+    # 同上
+    data_root: /Volumes/KINGSTON0/nuscenes
+    map_folder: /Volumes/KINGSTON0/nuscenes/nuScenes-map-expansion-v1.3
+    version: mini  # mini or trainval
+    input_size: [ 448, 256 ] #[w,h]
+    target_cameras: ['CAM_BACK', 'CAM_BACK_LEFT', 'CAM_BACK_RIGHT', 'CAM_FRONT', 'CAM_FRONT_LEFT', 'CAM_FRONT_RIGHT']
+    map_extractor: [ 'drivable_area', 'road_divider', 'lane_divider' ]
+    map_range: [ 100, 100 ] # longitude lateral
+    keep_ratio: False
+    img_read: cv2  # cv2 or pillow
+    pipeline:
+      normalize: [ [ 103.53, 116.28, 123.675 ], [ 57.375, 57.12, 58.395 ] ]
+device:
+  gpu_ids: -1 # Set like [0, 1, 2, 3] if you have multi-GPUs  if use CPU, set as -1
+  workers_per_gpu: 1
+  batchsize_per_gpu: 8
+schedule:
+#  resume:
+#  load_model: '/Users/lvanyang/Downloads/model_last.ckpt'
+  optimizer:
+    name: AdamW
+    lr: 0.001
+    weight_decay: 0.0000001
+  warmup:
+    name: linear
+    steps: 500
+    ratio: 0.0001
+  total_epochs: 300
+  lr_schedule:
+    name: CosineAnnealingLR
+    T_max: 300
+    eta_min: 0.00005
+  val_intervals: 1
+grad_clip: 5
+evaluators:
+  segm_evaluator:
+    name: BEVSegmEvaluator
+    # support heads list below
+    veh_segm_head:
+      target_names: ['vehicle']
+    drivable_segm_head:
+      target_names: ['drivable_area']
+    laneline_segm_head:
+      target_names: ['laneline']
+log:
+  interval: 50
+save:
+  interval: 50
+
+class_names: []
