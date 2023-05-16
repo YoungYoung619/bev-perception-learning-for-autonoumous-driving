@@ -27,7 +27,9 @@ python tools/train.py --config ${cfg_file}
 ```
 
 ### Demo
+```bash
 python demo/demo_3ddet.py --cfg_file=${cfg_file} --model_file=${model_ckpt} --device=mps
+```
 <div align=center><img src="docs/figs/bevdepth_3d.gif"></div>
 <div align="center">图.2 Bevdepth 3d目标检测头效果</div>
 
