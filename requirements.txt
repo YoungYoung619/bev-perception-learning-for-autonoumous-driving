@@ -15,7 +15,7 @@ pytorch-lightning>=1.7.0
 tabulate
 tensorboard
 termcolor
-torch>=1.12
+torch>=2.2.0
 torchmetrics
 torchvision
 tqdm
