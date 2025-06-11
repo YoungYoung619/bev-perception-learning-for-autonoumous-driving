@@ -15,7 +15,8 @@ pytorch-lightning>=1.7.0
 tabulate
 tensorboard
 termcolor
-torch>=1.12
+torch>=2.7.1
 torchmetrics
 torchvision
 tqdm
+requests>=2.32.4 # not directly required, pinned by Snyk to avoid a vulnerability
